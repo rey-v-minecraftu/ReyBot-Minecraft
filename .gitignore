@@ -1,0 +1,6 @@
+# Ignorované soubory Pythonu
+__pycache__/
+*.pyc
+
+# TAJNÉ SOUBORY A ZÁVISLOSTI
+config.py
