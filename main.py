@@ -3,6 +3,8 @@ from discord.ext import commands
 import random
 import sys 
 import os 
+import threading 
+from flask import Flask 
 import unicodedata 
 
 # ===============================================
@@ -1056,7 +1058,23 @@ async def vyzvat(interaction: discord.Interaction, hrac: discord.Member):
                                             view=VyzvaView(interaction.user, hrac, interaction.client))
 
 # ===============================================
-# F) SPUŠTĚNÍ - ZABEZPEČENÉ NAČTENÍ TOKENU
+# F) UPTIME UDRŽENÍ (PRO RENDER)
+# ===============================================
+
+app = Flask('')
+
+@app.route('/')
+def home():
+    # Render kontroluje tuto stránku, aby viděl, že je bot naživu
+    return "Bot je spuštěn."
+
+def run_web_server():
+    # Spustí web server na portu, který je dynamicky přidělen Renderem
+    port = int(os.environ.get('PORT', 10000))
+    app.run(host='0.0.0.0', port=port)
+
+# ===============================================
+# G) SPUŠTĚNÍ - ZABEZPEČENÉ NAČTENÍ TOKENU
 # ===============================================
 
 # 1. Pokusíme se načíst token ze systémové proměnné (pro hosting)
@@ -1076,7 +1094,20 @@ if DISCORD_TOKEN is None:
         print("------------------------------------------------------\n\n")
         sys.exit(1)
 
+# ===============================================
+# F) SPUŠTĚNÍ - ZABEZPEČENÉ NAČTENÍ TOKENU
+# ===============================================
+
+# ... (Kód pro načtení DISCORD_TOKEN zůstává beze změny) ...
+
 if __name__ == "__main__":
+    
+    # 1. Spustíme webový server v samostatném vlákně
+    # Tento server odpovídá na ping Renderu a zabraňuje timeoutu.
+    t = threading.Thread(target=run_web_server)
+    t.start()
+    
+    # 2. Spustíme Discord bota v hlavním vlákně
     try:
         print("POKUS O SPOUŠTĚNÍ BOTA...")
         bot.run(DISCORD_TOKEN)
